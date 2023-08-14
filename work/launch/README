@@ -1,0 +1,10 @@
+sudo chmod 777 /dev/ttyUSB0
+roslaunch work controller_manager.launch 
+
+roslaunch work start.launch
+
+/home/jubileus/Desktop/motor/src/dynamixel_motor/dynamixel_driver/src/dynamixel_driver
+
+rostopic pub -1 /joint4_controller/command std_msgs/Float64 -- 1.5
+
+rosservice call /dxl_manager/pan_tilt_port/stop_controller "joint3_controller"
