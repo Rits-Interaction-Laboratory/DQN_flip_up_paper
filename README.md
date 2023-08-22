@@ -1,9 +1,9 @@
 # DQN_flip_up_paper
 
-Python 3.8
-ROS melodic
-Ubuntu 18.04
-robot hand setup : <p>https://kb.seedrobotics.com/doku.php?id=start</p>
+Python 3.8<br>
+ROS melodic<br>
+Ubuntu 18.04<br>
+robot hand setup : <p>https://kb.seedrobotics.com/doku.php?id=start</p><br>
 
 ## 起動順番：
 ### dynamixel　サーバー起動
