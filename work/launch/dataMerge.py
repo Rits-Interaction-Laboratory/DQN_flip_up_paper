@@ -16,7 +16,8 @@ endDataFrame = dataFrame()
 flag = 0
 endMark = 0
 
-def callback(pwmData, sensorData):
+#This callback is receive data from mainCtrl and sensor
+def callback(pwmData, sensorData): 
     global dataList, lastState, action, lastAction, endMark
     lastState = dataList
     lastAction = action
@@ -31,6 +32,7 @@ def callback(pwmData, sensorData):
     if endMark == 1 :
         dataList.distance = 5.8
 
+#this callback receive keyboard input
 def keyboardCallback(data) :
     global endDataFrame, flag, startMark, lastState, lastAction, endMark
     if data.data == 'w' :
@@ -50,10 +52,10 @@ if __name__ == '__main__':
     pwmSub = message_filters.Subscriber('/PWM', MotorPWM)
     mergedDataPub = rospy.Publisher('dataFrame', dataFrame, queue_size=10) 
     plotDataPub = rospy.Publisher('plotFrame', stateData, queue_size=10)
-    sync = message_filters.ApproximateTimeSynchronizer([pwmSub, sensorSub], 5, 0.01)
+    sync = message_filters.ApproximateTimeSynchronizer([pwmSub, sensorSub], 5, 0.01) #use message_filters to make data synchronous
     sync.registerCallback(callback)
     while(True) :
-        if startMark == 1 :
+        if startMark == 1 : # data in action
             dataPass = dataFrame()
             dataPass.s = lastState
             dataPass.a = lastAction
@@ -67,7 +69,7 @@ if __name__ == '__main__':
             plotData.MotorPWM = action * 10
             plotData.Position = int(dataList.Position / 100)
             plotDataPub.publish(plotData)
-        if flag == 1 :
+        if flag == 1 : #data in end and input the reward
            print("please input reward and reset robot:")
            inputReward = input()
            endDataFrame.r = int(inputReward)
