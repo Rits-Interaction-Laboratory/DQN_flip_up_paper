@@ -9,16 +9,16 @@ from dynamixel_msgs.msg import dataFrame
 from dynamixel_msgs.msg import stateData
 from std_msgs.msg import String, Int32
 
-BATCH_SIZE = 32                                 
-LR = 0.01                                       
-EPSILON = 0.9                                   
-GAMMA = 0.9                                     
-TARGET_REPLACE_ITER = 10                       
-MEMORY_CAPACITY = 6000                         
-N_ACTIONS = 10                                  
-N_STATES = 4                               
+BATCH_SIZE = 32      #random draft from pool                           
+LR = 0.01            #learning rate                           
+EPSILON = 0.9        #probability of random choose action                           
+GAMMA = 0.9          #parameter in DQN                           
+TARGET_REPLACE_ITER = 10  #update targenet net per 10 iter                     
+MEMORY_CAPACITY = 6000    #max size of memory pool                     
+N_ACTIONS = 10       #actions node                           
+N_STATES = 4         #input node                      
 startMark = 0
-model_dir = '/home/jubileus/motor/src/dynamixel_motor/model/withoutPWM'
+model_dir = '/home/jubileus/motor/src/dynamixel_motor/model/withoutPWM' #save dir
 runningLoss = []
 rewardMemory = []
 startLearn = 0
@@ -40,7 +40,7 @@ class Net(nn.Module):
 class DQN(object):
     def __init__(self):                                                         
         self.eval_net, self.target_net = Net(), Net()  
-        #self.target_net.load_state_dict(torch.load(model_dir + "/model_50.pth"))   
+        #self.target_net.load_state_dict(torch.load(model_dir + "/model_50.pth"))   #load weight if need
         #self.eval_net.load_state_dict(torch.load(model_dir + "/model_50.pth"))                       
         self.learn_step_counter = 0                                             
         self.memory_counter = 0                                                 
@@ -48,7 +48,7 @@ class DQN(object):
         self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=LR)    
         self.loss_func = nn.MSELoss()                                           
 
-    def choose_action(self, x):                                                 
+    def choose_action(self, x):    #choose action and send it to mainCtrl                                             
         x = torch.unsqueeze(torch.FloatTensor(x), 0)                            
         if np.random.uniform() < EPSILON:                                       
             actions_value = self.eval_net.forward(x)                            
@@ -58,13 +58,13 @@ class DQN(object):
             action = np.random.randint(0, N_ACTIONS)                            
         return action                                                           
 
-    def store_transition(self, s, a, r, s_):                                    
+    def store_transition(self, s, a, r, s_):      #save data in pool                              
         transition = np.hstack((s, [a, r], s_))                                 
         index = self.memory_counter % MEMORY_CAPACITY                           
         self.memory[index, :] = transition                                      
         self.memory_counter += 1                                                
 
-    def learn(self):        
+    def learn(self):        #DQN main learning
         global runningLoss                                                    
         if self.learn_step_counter % TARGET_REPLACE_ITER == 0:                  
             self.target_net.load_state_dict(self.eval_net.state_dict())  
@@ -102,7 +102,7 @@ def keyboardCallback(data) :
     if data.data == 'l':
         startLearn = 1
 
-def callback(data) :
+def callback(data) : #receive data from datamerge
     global dqn, pub, startMark, startTime
     maxDistance = 8.0
     s = [data.s.distance, data.s.x, data.s.y, data.s.Position]
@@ -125,13 +125,15 @@ if __name__ == '__main__':
         while(startMark != 1):                                                
             pass
         startTime = time.time()
+        ####
+        #reward feedback
         while(startLearn == 0) :
             pass
         if rewardMemory != [] :
             s, a, r, s_ = rewardMemory.pop()
             #data = pd.DataFrame(s + [a,r] + s_)
             #print(s + [a,r] + s_)
-            #data.to_csv('csv_data.csv', sep=',', encoding='utf-8', header= False, index = False,mode='a')
+            #data.to_csv('csv_data.csv', sep=',', encoding='utf-8', header= False, index = False,mode='a') #save data to csv if need but it causes lag
             dqn.store_transition(s, a, r, s_) 
             rInput = r
         while rewardMemory != [] :
@@ -142,6 +144,7 @@ if __name__ == '__main__':
             #print(s + [a,r] + s_)
             #data.to_csv('csv_data.csv', sep=',', encoding='utf-8', header= False, index = False,mode='a')
             dqn.store_transition(s, a, r, s_)      
+        ####
         if dqn.memory_counter > MEMORY_CAPACITY:
             dqn.learn()
             k += 1
