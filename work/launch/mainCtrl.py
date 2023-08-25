@@ -23,6 +23,7 @@ Key = ''
 startMark = 0
 targetSpeed = 0
 
+#keyboard control 
 def callback(data):
     global Str, Goal, Speed, Key, startMark
     Key = data.data
@@ -34,6 +35,7 @@ def callback(data):
     if Key == 'r' :
         Goal, Speed = Stop(Goal, Speed)
 
+#receive action from DQN
 def speedCallBack(data) :
     global targetSpeed, startMark
     if startMark == 1 :
@@ -41,6 +43,7 @@ def speedCallBack(data) :
     else :
         targetSpeed = 0
 
+#not use now
 def movef(Goal, Speed) :
     if Goal == -1 or Goal <= present_pos:
         Speed = 20
@@ -51,6 +54,7 @@ def movef(Goal, Speed) :
             Goal = 3040
     return Goal, Speed
 
+#not use now
 def moveb(Goal, Speed) :
     present_pos = dxl_io.get_position(Id)
     if Goal == -1 or Goal >= present_pos:
@@ -86,7 +90,7 @@ if __name__ == '__main__':
     port = options.port
     baudrate = options.baud
     
-    Id = 37
+
     flag = 0
     last_pos = 0
     Time = 0;
@@ -119,7 +123,7 @@ if __name__ == '__main__':
             current_state.calc_Speed = targetSpeed
             current_state.header.stamp = rospy.Time.now()
             current_state.action = targetSpeed / 5
-            pub.publish(current_state)
+            pub.publish(current_state) ###publish motor state to datamerge
             print(targetSpeed, startMark)
             if startMark == 0 :
                 dxl_io.set_position(37, int(0))
@@ -131,9 +135,9 @@ if __name__ == '__main__':
                 elif targetSpeed == 0:
                     Goal = present_pos
                 if targetSpeed != 0 :
-                    frontDistance = (targetSpeed - pwm) * constParameter + pwm2Distance(targetSpeed)
+                    frontDistance = (targetSpeed - pwm) * constParameter + pwm2Distance(targetSpeed) #calculate the distance gap using DQN predicted PWM
                 if Goal != -1 and Goal < present_pos:
-                    dxl_io.set_position(37, int(max(Goal, present_pos + frontDistance)))
+                    dxl_io.set_position(37, int(max(Goal, present_pos + frontDistance))) #set target position with gap and present position
 	  	#dxl_io.set_position(39, int(max(Goal, present_pos + frontDistance)))
                 #print(Goal, int(max(Goal, present_pos - frontDistance)), present_pos)
                 elif Goal > present_pos:
